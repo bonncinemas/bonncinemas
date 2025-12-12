@@ -88,7 +88,7 @@
             Play, Clock, Star, Ticket, Search, User, Menu, X, Info, 
             Clapperboard, Plus, Minus, CreditCard, Banknote, QrCode, 
             CheckCircle, ArrowRight, Home, Calendar, Gift, Newspaper, 
-            ChevronLeft, Smartphone, LogOut, Film, Lock, Camera, AlertTriangle, RefreshCw
+            ChevronLeft, Smartphone, LogOut, Film, Lock, Camera, AlertTriangle, RefreshCw, Tag, Copy
         } from 'lucide-react';
 
         // --- Mock Data ---
@@ -430,6 +430,10 @@
             const [selectedSeats, setSelectedSeats] = useState([]);
             const [foodCart, setFoodCart] = useState({});
             const [isPaid, setIsPaid] = useState(false);
+            
+            // Coupon states
+            const [couponCode, setCouponCode] = useState('');
+            const [discountPercent, setDiscountPercent] = useState(0);
 
             // Generate stable seat data when time changes
             const occupiedSeats = useMemo(() => {
@@ -437,8 +441,6 @@
                 const occupied = new Set();
                 const rows = 8;
                 const cols = 10;
-                // Generate deterministic random based on time string to keep it consistent for the session
-                // Simple hash function for demo
                 let seed = 0;
                 for (let i = 0; i < selectedTime.length; i++) seed += selectedTime.charCodeAt(i);
                 
@@ -449,7 +451,6 @@
 
                 for(let r=0; r<rows; r++) {
                     for(let c=1; c<=cols; c++) {
-                        // Different fill rates for different times
                         if(pseudoRandom() > 0.75) { 
                             occupied.add(`${String.fromCharCode(65 + r)}${c + 1}`);
                         }
@@ -466,7 +467,10 @@
                 const item = FOOD_MENU.find(i => i.id === id);
                 return sum + (item.price * qty);
             }, 0);
-            const grandTotal = seatTotal + foodTotal;
+            
+            const subTotal = seatTotal + foodTotal;
+            const discountAmount = subTotal * (discountPercent / 100);
+            const grandTotal = Math.max(0, subTotal - discountAmount);
 
             const handleSeatClick = (seatId, type, price) => {
                 const exists = selectedSeats.find(s => s.id === seatId);
@@ -485,6 +489,15 @@
 
             const handleBack = () => {
                 if (step > 1) setStep(step - 1);
+            };
+            
+            const handleApplyCoupon = () => {
+                if (couponCode.trim().toUpperCase() === 'BONN100') {
+                    setDiscountPercent(100);
+                } else {
+                    setDiscountPercent(0);
+                    alert("Mã giảm giá không hợp lệ");
+                }
             };
 
             if (isPaid) {
@@ -600,6 +613,37 @@
                                             <div className="flex justify-between"><span>Ghế</span> <span className="font-bold text-right w-40 break-words">{selectedSeats.map(s=>s.id).join(', ')}</span></div>
                                             {Object.keys(foodCart).length > 0 && (
                                                 <div className="flex justify-between"><span>Bắp nước</span> <span className="font-bold">{Object.values(foodCart).reduce((a,b)=>a+b,0)} món</span></div>
+                                            )}
+                                            
+                                            <div className="py-2 border-t border-dashed border-slate-200 mt-2">
+                                                <div className="flex gap-2">
+                                                    <input 
+                                                        type="text" 
+                                                        value={couponCode}
+                                                        onChange={(e) => setCouponCode(e.target.value)}
+                                                        placeholder="Nhập mã giảm giá"
+                                                        className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-xs uppercase font-bold text-slate-700 outline-none focus:border-blue-500"
+                                                        disabled={discountPercent > 0}
+                                                    />
+                                                    {discountPercent > 0 ? (
+                                                        <button onClick={() => {setDiscountPercent(0); setCouponCode('')}} className="bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold">Xóa</button>
+                                                    ) : (
+                                                        <button onClick={handleApplyCoupon} className="bg-slate-800 text-white px-3 py-1 rounded-lg text-xs font-bold">Áp dụng</button>
+                                                    )}
+                                                </div>
+                                                {!discountPercent && (
+                                                    <p className="text-[10px] text-green-600 mt-1 flex items-center gap-1 font-medium">
+                                                        <Tag size={10}/> Mã <strong>BONN100</strong>: Giảm 100% đơn 0đ (Khai trương)
+                                                    </p>
+                                                )}
+                                                {discountPercent > 0 && (
+                                                    <p className="text-[10px] text-green-600 mt-1 font-bold">Đã áp dụng mã giảm giá {discountPercent}%!</p>
+                                                )}
+                                            </div>
+
+                                            <div className="flex justify-between text-slate-500"><span>Tạm tính</span> <span>{subTotal.toLocaleString()} đ</span></div>
+                                            {discountPercent > 0 && (
+                                                <div className="flex justify-between text-green-600 font-bold"><span>Giảm giá</span> <span>-{discountAmount.toLocaleString()} đ</span></div>
                                             )}
                                             <div className="border-t border-slate-200 pt-3 mt-2 flex justify-between text-lg font-bold text-blue-600 items-end">
                                                 <span className="text-sm font-normal text-slate-500">Tổng cộng</span>
@@ -729,10 +773,42 @@
                             </div>
                         );
                         return (
-                            <div className="container mx-auto px-4 pt-20 animate-in zoom-in duration-500 min-h-[60vh] flex flex-col items-center justify-center text-center">
-                                <Gift size={48} className="text-blue-500 mb-4 opacity-50" />
-                                <h2 className="text-xl font-bold text-white mb-2">Ưu đãi thành viên</h2>
-                                <p className="text-slate-400 text-sm">Xin chào {user.fullName}, hiện chưa có mã giảm giá nào.</p>
+                            <div className="container mx-auto px-4 pt-8 animate-in zoom-in duration-500 min-h-[60vh]">
+                                <h2 className="text-2xl font-bold text-white mb-6 border-l-4 border-blue-500 pl-4">Kho Ưu Đãi</h2>
+                                <div className="grid gap-4">
+                                    <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-blue-500/30 rounded-2xl p-5 relative overflow-hidden shadow-lg">
+                                        <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">KHAI TRƯƠNG</div>
+                                        <div className="flex gap-4 items-center">
+                                            <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center shrink-0">
+                                                <Gift size={24} className="text-blue-400" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="text-white font-bold text-base">Giảm 100% Hóa Đơn</h3>
+                                                <p className="text-slate-400 text-xs mt-1">Áp dụng cho đơn 0đ. Dành tặng khách hàng mới.</p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 pt-3 border-t border-slate-700/50 flex justify-between items-center">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] text-slate-500 uppercase font-bold">Mã voucher</span>
+                                                <span className="text-blue-400 font-mono font-bold text-lg tracking-wider">BONN100</span>
+                                            </div>
+                                            <button 
+                                                onClick={() => {
+                                                    const el = document.createElement('textarea');
+                                                    el.value = 'BONN100';
+                                                    document.body.appendChild(el);
+                                                    el.select();
+                                                    document.execCommand('copy');
+                                                    document.body.removeChild(el);
+                                                    alert('Đã sao chép mã: BONN100');
+                                                }}
+                                                className="bg-white text-slate-900 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors"
+                                            >
+                                                Sao Chép
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         );
                     case 'news':
