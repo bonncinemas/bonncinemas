@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bonn Cinemas</title>
+    <title>BonnCinemas</title>
 
     <!-- PWA Settings cho iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -532,11 +532,11 @@
                                 {/* Banner Slider */}
                                 <div className="pl-5 overflow-x-auto flex gap-4 hide-scrollbar mb-8 pr-5 py-2 animate-fade-in">
                                     {MOVIES.slice(0, 3).map((movie, idx) => (
-                                        <div key={movie.id} className="min-w-[85vw] sm:min-w-[320px] aspect-[16/9] rounded-3xl overflow-hidden relative group shrink-0 shadow-lg shadow-black/50 transition-transform active:scale-95" onClick={() => setSelectedMovie(movie)}>
+                                        <div key={movie.id} className="min-w-[70vw] sm:min-w-[280px] h-[150px] rounded-3xl overflow-hidden relative group shrink-0 shadow-lg shadow-black/50 transition-transform active:scale-95" onClick={() => setSelectedMovie(movie)}>
                                             <img src={movie.backdrop} className="w-full h-full object-cover" alt={movie.title} />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent flex flex-col justify-end p-5">
-                                                {/* Only show "Đang Hot" for the first movie */}
-                                                {idx === 0 && (
+                                                {/* Only show "Đang Hot" for the Spider-Man movie (id: 2) */}
+                                                {movie.id === 2 && (
                                                     <span className="text-blue-400 text-[10px] font-black uppercase tracking-wider mb-1 bg-black/60 w-fit px-2 py-0.5 rounded backdrop-blur-sm shadow-sm">Đang Hot</span>
                                                 )}
                                                 <h3 className="text-white font-bold text-lg truncate leading-tight drop-shadow-md">{movie.title}</h3>
