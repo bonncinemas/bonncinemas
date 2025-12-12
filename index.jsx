@@ -1,0 +1,815 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  Play, Clock, Star, Ticket, Search, User, Menu, X, Info, 
+  Clapperboard, Plus, Minus, CreditCard, Banknote, QrCode, 
+  CheckCircle, ArrowRight, Home, Calendar, Gift, Newspaper, 
+  ChevronLeft, Smartphone, LogOut, Film, Lock, Camera
+} from 'lucide-react';
+
+// --- Mock Data ---
+const MOVIES = [
+  {
+    id: 1,
+    title: "Avatar: Dòng Chảy Của Nước",
+    genre: "Viễn Tưởng / Hành Động",
+    duration: "3h 12m",
+    rating: 4.8,
+    price: 120000,
+    image: "https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
+    backdrop: "https://image.tmdb.org/t/p/original/s16H6tpK2utvwDtzZ8Qy4qm5Emw.jpg",
+    description: "Jake Sully sống với gia đình mới hình thành của mình trên hành tinh Pandora. Khi một mối đe dọa quen thuộc quay trở lại, Jake phải làm việc với Neytiri và quân đội của chủng tộc Na'vi để bảo vệ hành tinh của họ.",
+    director: "James Cameron",
+    cast: "Sam Worthington, Zoe Saldana"
+  },
+  {
+    id: 2,
+    title: "Người Nhện: Du Hành Vũ Trụ Nhện",
+    genre: "Hoạt Hình / Hành Động",
+    duration: "2h 20m",
+    rating: 4.9,
+    price: 110000,
+    image: "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
+    backdrop: "https://image.tmdb.org/t/p/original/4HodYYKEIsGOdinkGi2Ucz6X9i0.jpg",
+    description: "Miles Morales tái xuất trong phần tiếp theo của loạt phim Spider-Verse đoạt giải Oscar, Miles đi qua Đa Vũ Trụ để gặp gỡ và bảo vệ sự tồn tại của các Người Nhện khác.",
+    director: "Joaquim Dos Santos",
+    cast: "Shameik Moore, Hailee Steinfeld"
+  },
+  {
+    id: 3,
+    title: "Oppenheimer",
+    genre: "Lịch Sử / Chính Kịch",
+    duration: "3h 00m",
+    rating: 4.7,
+    price: 115000,
+    image: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+    backdrop: "https://image.tmdb.org/t/p/original/rLb2cs785xa3VIIyncefpRJflkZ.jpg",
+    description: "Câu chuyện về nhà vật lý lý thuyết J. Robert Oppenheimer, người đứng đầu Dự án Manhattan tạo ra quả bom nguyên tử đầu tiên trong Thế chiến II.",
+    director: "Christopher Nolan",
+    cast: "Cillian Murphy, Emily Blunt"
+  },
+  {
+    id: 4,
+    title: "Dune: Hành Tinh Cát - Phần 2",
+    genre: "Viễn Tưởng / Phiêu Lưu",
+    duration: "2h 46m",
+    rating: 4.6,
+    price: 130000,
+    image: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+    backdrop: "https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg",
+    description: "Paul Atreides hợp nhất với Chani và người Fremen trong khi đang trên đường trả thù những kẻ đã hủy diệt gia đình mình.",
+    director: "Denis Villeneuve",
+    cast: "Timothée Chalamet, Zendaya"
+  }
+];
+
+const SHOWTIMES = ["09:30", "11:45", "14:15", "16:50", "19:30", "22:15"];
+const GENRES = ['Tất cả', 'Hành động', 'Viễn tưởng', 'Kinh dị', 'Hoạt hình', 'Lịch Sử'];
+
+const FOOD_MENU = [
+  { id: 'f1', name: "Bắp Ngọt (S)", price: 45000, icon: "🍿" },
+  { id: 'f2', name: "Bắp Phô Mai (M)", price: 65000, icon: "🧀" },
+  { id: 'f4', name: "Coca Cola", price: 35000, icon: "🥤" },
+  { id: 'f5', name: "Nước Suối", price: 15000, icon: "💧" },
+];
+
+const PAYMENT_METHODS = [
+  { id: 'zalo', name: 'ZaloPay', icon: 'Z' },
+  { id: 'momo', name: 'Momo', icon: 'M' },
+  { id: 'card', name: 'Thẻ ATM', icon: '💳' },
+  { id: 'cash', name: 'Tiền mặt', icon: '💵' },
+];
+
+const AVATARS = [
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150",
+  "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=150&h=150",
+  "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&h=150",
+  "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&h=150",
+  "default"
+];
+
+// --- Components ---
+
+const Seat = ({ id, status, type, onClick }) => {
+  let bgColor = "bg-slate-700";
+  let additionalClass = "";
+  
+  if (status === 'selected') {
+    bgColor = "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]";
+    additionalClass = "scale-110 z-10 border-white border"; 
+  } else if (status === 'occupied') {
+    bgColor = "bg-slate-800/40 cursor-not-allowed";
+    additionalClass = "opacity-30";
+  } else if (type === 'vip') {
+    bgColor = "bg-purple-600 border border-purple-400 shadow-[0_0_5px_rgba(147,51,234,0.3)]";
+  }
+
+  return (
+    <button
+      disabled={status === 'occupied'}
+      onClick={() => status !== 'occupied' && onClick()}
+      className={`w-7 h-7 sm:w-8 sm:h-8 m-0.5 sm:m-1 rounded-t-lg ${bgColor} flex items-center justify-center text-[8px] sm:text-[9px] font-bold text-white/60 transition-all duration-300 active:scale-90 transform ${additionalClass}`}
+    >
+       {/* {id} */}
+    </button>
+  );
+};
+
+// --- Auth Modal Component ---
+const AuthModal = ({ onClose, onLoginSuccess }) => {
+  const [step, setStep] = useState(1); // 1: Phone, 2: Info, 3: Avatar
+  const [phone, setPhone] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState('default');
+
+  const handleNext = () => {
+    // Chỉ cho phép đi tiếp nếu SĐT đúng 10 số và bắt đầu bằng 0
+    if (step === 1 && phone.length === 10 && phone.startsWith('0')) setStep(2);
+    else if (step === 2 && fullName && username) setStep(3);
+    else if (step === 3) {
+      // Save to localStorage
+      const userData = { phone, fullName, username, avatar: selectedAvatar };
+      localStorage.setItem('bonn_user', JSON.stringify(userData));
+      onLoginSuccess(userData);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+      <div className="bg-white w-full max-w-sm rounded-3xl p-6 relative overflow-hidden shadow-2xl">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-800"><X size={24}/></button>
+        
+        {/* Progress Bar */}
+        <div className="flex gap-2 mb-8 mt-2">
+          {[1, 2, 3].map(s => (
+            <div key={s} className={`h-1.5 flex-1 rounded-full transition-all ${s <= step ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
+          ))}
+        </div>
+
+        {step === 1 && (
+          <div className="animate-in slide-in-from-right duration-300">
+            <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+              <Smartphone size={32} className="text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-center text-slate-900 mb-2">Số điện thoại</h2>
+            <p className="text-slate-500 text-center text-sm mb-8">Nhập số điện thoại để đăng nhập hoặc đăng ký thành viên.</p>
+            
+            <div className="flex items-center bg-slate-100 rounded-xl p-4 border-2 border-transparent focus-within:border-blue-500 transition-all">
+              <div className="flex items-center gap-2 mr-3 border-r border-slate-300 pr-3">
+                 <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Flag_of_Vietnam.svg" className="w-6 h-4 object-cover rounded shadow-sm" alt="VN" />
+                 <span className="font-bold text-slate-500">+84</span>
+              </div>
+              <input 
+                type="tel" 
+                value={phone}
+                onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    if (val.length <= 10) setPhone(val);
+                }}
+                maxLength={10}
+                placeholder="000 000 000"
+                className="bg-transparent border-none outline-none text-xl font-bold text-slate-900 w-full placeholder:text-slate-300"
+                autoFocus
+              />
+            </div>
+            {phone.length > 0 && (
+                phone[0] !== '0' ? (
+                    <p className="text-red-500 text-xs mt-2 text-center font-medium">Số điện thoại phải bắt đầu bằng số 0.</p>
+                ) : phone.length !== 10 ? (
+                    <p className="text-red-500 text-xs mt-2 text-center font-medium">Số điện thoại phải bao gồm 10 chữ số.</p>
+                ) : null
+            )}
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="animate-in slide-in-from-right duration-300">
+            <h2 className="text-2xl font-bold text-center text-slate-900 mb-6">Thông tin cá nhân</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase ml-1 block mb-1">Họ và Tên</label>
+                <input 
+                  type="text" 
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full bg-slate-100 rounded-xl p-4 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 border border-transparent"
+                  placeholder="Nguyễn Văn A"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase ml-1 block mb-1">Username</label>
+                <input 
+                  type="text" 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full bg-slate-100 rounded-xl p-4 font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 border border-transparent"
+                  placeholder="@username"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="animate-in slide-in-from-right duration-300">
+            <h2 className="text-2xl font-bold text-center text-slate-900 mb-2">Chọn Avatar</h2>
+            <p className="text-slate-500 text-center text-sm mb-6">Chọn ảnh đại diện để mọi người nhận ra bạn.</p>
+            
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              {AVATARS.map((avt, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => setSelectedAvatar(avt)}
+                  className={`w-16 h-16 rounded-full overflow-hidden border-4 transition-all ${selectedAvatar === avt ? 'border-blue-500 scale-110 shadow-lg shadow-blue-500/30' : 'border-transparent hover:scale-105 bg-slate-100'}`}
+                >
+                  {avt === 'default' ? (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400">
+                      <User size={32} />
+                    </div>
+                  ) : (
+                    <img src={avt} className="w-full h-full object-cover" alt="avatar" />
+                  )}
+                </button>
+              ))}
+            </div>
+            
+            <div className="bg-slate-50 p-4 rounded-xl text-center border border-slate-100">
+                <p className="font-bold text-slate-900 text-lg">{fullName}</p>
+                <p className="text-slate-500 text-sm">@{username}</p>
+            </div>
+          </div>
+        )}
+
+        <button 
+          onClick={handleNext}
+          // Yêu cầu chính xác 10 số và bắt đầu bằng 0
+          disabled={(step === 1 && (phone.length !== 10 || !phone.startsWith('0'))) || (step === 2 && (!fullName || !username))}
+          className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl mt-8 hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-600/30"
+        >
+          {step === 3 ? 'Hoàn Tất Đăng Ký' : 'Tiếp Tục'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// --- Movie Detail Modal ---
+const MovieDetailsModal = ({ movie, onClose, onBook }) => {
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in zoom-in duration-300">
+      <div className="bg-slate-900 rounded-3xl max-w-lg w-full border border-slate-700 shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
+        <button onClick={onClose} className="absolute top-4 right-4 bg-black/50 p-2 rounded-full hover:bg-white/20 transition-colors z-10 text-white">
+          <X size={20} />
+        </button>
+        
+        <div className="relative w-full aspect-video shrink-0">
+          <img src={movie.backdrop} className="w-full h-full object-cover" alt="Backdrop" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+          <div className="absolute bottom-4 left-6 right-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 leading-tight shadow-black drop-shadow-md">{movie.title}</h2>
+            <div className="flex flex-wrap gap-2 text-xs font-bold">
+                <span className="bg-yellow-500 text-black px-2 py-0.5 rounded flex items-center gap-1"><Star size={10} fill="black"/> {movie.rating}</span>
+                <span className="bg-slate-700 text-white px-2 py-0.5 rounded flex items-center gap-1"><Clock size={10}/> {movie.duration}</span>
+                <span className="bg-blue-600 text-white px-2 py-0.5 rounded">{movie.genre.split('/')[0]}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-6 overflow-y-auto custom-scrollbar">
+             <p className="text-slate-300 text-sm leading-relaxed mb-6">{movie.description}</p>
+             
+             <div className="space-y-3 mb-6">
+                <div className="flex gap-4 p-3 bg-slate-800/50 rounded-xl">
+                    <div className="text-slate-500 text-xs uppercase font-bold w-16 shrink-0">Đạo diễn</div>
+                    <div className="text-white text-sm font-medium">{movie.director}</div>
+                </div>
+                <div className="flex gap-4 p-3 bg-slate-800/50 rounded-xl">
+                    <div className="text-slate-500 text-xs uppercase font-bold w-16 shrink-0">Diễn viên</div>
+                    <div className="text-white text-sm font-medium">{movie.cast}</div>
+                </div>
+             </div>
+
+             <button 
+                onClick={() => { onClose(); onBook(movie); }}
+                className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-500 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20"
+             >
+                <Ticket size={20} /> Đặt Vé Ngay
+             </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const BookingWizard = ({ movie, onClose, user }) => {
+  const [step, setStep] = useState(1);
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [foodCart, setFoodCart] = useState({});
+  const [isPaid, setIsPaid] = useState(false);
+
+  // Constants
+  const rows = 8;
+  const totalCols = 10;
+  
+  // Totals
+  const seatTotal = selectedSeats.reduce((sum, seat) => sum + seat.price, 0);
+  const foodTotal = Object.entries(foodCart).reduce((sum, [id, qty]) => {
+    const item = FOOD_MENU.find(i => i.id === id);
+    return sum + (item.price * qty);
+  }, 0);
+  const grandTotal = seatTotal + foodTotal;
+
+  // Handlers
+  const handleSeatClick = (seatId, type, price) => {
+    const exists = selectedSeats.find(s => s.id === seatId);
+    if (exists) setSelectedSeats(selectedSeats.filter(s => s.id !== seatId));
+    else setSelectedSeats([...selectedSeats, { id: seatId, type, price }]);
+  };
+
+  const handleFoodChange = (id, delta) => {
+    setFoodCart(prev => {
+      const current = prev[id] || 0;
+      const next = Math.max(0, current + delta);
+      if (next === 0) { const { [id]: _, ...rest } = prev; return rest; }
+      return { ...prev, [id]: next };
+    });
+  };
+
+  if (isPaid) {
+    return (
+        <div className="fixed inset-0 z-[70] bg-black flex flex-col items-center justify-center p-6 text-center animate-in zoom-in duration-300">
+            <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(34,197,94,0.6)] animate-bounce">
+                <CheckCircle size={48} className="text-white" />
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-2">Thành Công!</h2>
+            <p className="text-slate-400 mb-8 max-w-[250px]">Vé đã được gửi vào tài khoản <span className="text-white font-bold">{user.username}</span>.</p>
+            <button onClick={onClose} className="w-full max-w-sm bg-slate-800 text-white py-4 rounded-2xl font-bold active:scale-95 transition-transform">Về Trang Chủ</button>
+        </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 bg-black/80 pointer-events-auto backdrop-blur-sm transition-opacity duration-300" onClick={onClose}></div>
+      <div className="bg-slate-900 w-full sm:max-w-[450px] h-[95vh] sm:h-[850px] rounded-t-3xl sm:rounded-2xl relative pointer-events-auto flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden shadow-2xl border-t border-slate-700">
+        
+        {/* Header */}
+        <div className="p-5 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900 z-10">
+             <div>
+                <h3 className="text-white font-bold text-lg truncate max-w-[200px]">{movie.title}</h3>
+                <p className="text-blue-500 text-xs font-bold uppercase tracking-wider mt-1">
+                    {step === 1 ? 'Chọn Giờ' : step === 2 ? 'Chọn Ghế' : step === 3 ? 'Bắp Nước' : 'Thanh Toán'}
+                </p>
+             </div>
+             <button onClick={onClose} className="bg-slate-800 p-2 rounded-full text-white hover:bg-slate-700 transition-colors"><X size={20}/></button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-5 custom-scrollbar relative">
+            {step === 1 && (
+                <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-right-8 duration-300">
+                    {SHOWTIMES.map(time => (
+                        <button key={time} onClick={() => { setSelectedTime(time); setStep(2); }} className="p-5 bg-slate-800 rounded-2xl border border-slate-700 hover:border-blue-500 hover:bg-blue-600 transition-all active:scale-95 group">
+                            <span className="text-white font-bold text-2xl block mb-1 group-hover:scale-110 transition-transform">{time}</span>
+                            <span className="text-slate-400 text-xs group-hover:text-white/80">Ghế trống: {Math.floor(Math.random() * 50)}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {step === 2 && (
+                <div className="flex flex-col items-center pt-2 animate-in slide-in-from-right-8 duration-300">
+                    <div className="w-[80%] mb-4 flex flex-col items-center justify-center">
+                        <div className="w-full h-8 border-t-4 border-blue-500/50 rounded-[50%] bg-gradient-to-b from-blue-500/10 to-transparent mb-2"></div>
+                        <span className="text-slate-500 text-[10px] tracking-[0.3em] font-medium opacity-60 uppercase">Màn hình</span>
+                    </div>
+
+                    <div className="mb-8">
+                        {Array.from({ length: rows }).map((_, r) => (
+                            <div key={r} className="flex justify-center items-center gap-1 mb-1">
+                                <span className="w-4 text-[10px] font-bold text-slate-600 text-center">{String.fromCharCode(65 + r)}</span>
+                                {Array.from({ length: totalCols }).map((_, c) => {
+                                    const id = `${String.fromCharCode(65 + r)}${c + 1}`;
+                                    const isVip = r >= 3 && r <= 6 && c >= 2 && c <= 7;
+                                    const price = isVip ? 150000 : movie.price;
+                                    const status = selectedSeats.find(s => s.id === id) ? 'selected' : (Math.random() > 0.85 ? 'occupied' : 'available');
+                                    
+                                    return (
+                                        <Seat 
+                                            key={id} id={id} 
+                                            status={status} 
+                                            type={isVip ? 'vip' : 'normal'} 
+                                            onClick={() => handleSeatClick(id, isVip ? 'vip' : 'normal', price)} 
+                                        />
+                                    );
+                                })}
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="w-full flex justify-between gap-2 text-[10px] text-slate-400 bg-slate-800/40 py-3 px-4 rounded-xl border border-slate-800">
+                        <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-slate-800 opacity-40 rounded-t border border-slate-600"></div> Đã đặt</div>
+                        <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-slate-700 rounded-t"></div> Thường</div>
+                        <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-purple-600 border border-purple-400 rounded-t"></div> VIP</div>
+                        <div className="flex items-center gap-1.5"><div className="w-4 h-4 bg-green-500 rounded-t border border-white"></div> Chọn</div>
+                    </div>
+                </div>
+            )}
+
+            {step === 3 && (
+                <div className="space-y-3 animate-in slide-in-from-right-8 duration-300">
+                    {FOOD_MENU.map(item => (
+                        <div key={item.id} className="flex items-center justify-between bg-slate-800 p-3 rounded-xl border border-slate-700">
+                            <div className="flex items-center gap-3">
+                                <span className="text-2xl bg-slate-900 p-2 rounded-lg">{item.icon}</span>
+                                <div>
+                                    <div className="text-white font-bold text-sm">{item.name}</div>
+                                    <div className="text-blue-400 text-xs">{item.price.toLocaleString()}đ</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 bg-slate-900 rounded-lg p-1">
+                                <button onClick={() => handleFoodChange(item.id, -1)} className="w-7 h-7 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-white rounded"><Minus size={14}/></button>
+                                <span className="w-4 text-center text-white text-sm font-bold">{foodCart[item.id] || 0}</span>
+                                <button onClick={() => handleFoodChange(item.id, 1)} className="w-7 h-7 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded"><Plus size={14}/></button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {step === 4 && (
+                <div className="space-y-5 animate-in slide-in-from-right-8 duration-300">
+                    <div className="bg-white p-5 rounded-2xl shadow-xl relative overflow-hidden text-slate-800">
+                        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                        <div className="border-b border-dashed border-slate-300 pb-3 mb-3">
+                            <h4 className="font-bold text-lg">Xác Nhận Đặt Vé</h4>
+                            <p className="text-slate-500 text-xs">Khách hàng: {user.fullName}</p>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex justify-between"><span>Phim</span> <span className="font-bold text-right truncate w-40">{movie.title}</span></div>
+                            <div className="flex justify-between"><span>Suất</span> <span className="font-bold bg-slate-100 px-2 rounded">{selectedTime}</span></div>
+                            <div className="flex justify-between"><span>Ghế</span> <span className="font-bold text-right w-40 break-words">{selectedSeats.map(s=>s.id).join(', ')}</span></div>
+                            {Object.keys(foodCart).length > 0 && (
+                                <div className="flex justify-between"><span>Bắp nước</span> <span className="font-bold">{Object.values(foodCart).reduce((a,b)=>a+b,0)} món</span></div>
+                            )}
+                            <div className="border-t border-slate-200 pt-3 mt-2 flex justify-between text-lg font-bold text-blue-600 items-end">
+                                <span className="text-sm font-normal text-slate-500">Tổng cộng</span>
+                                <span>{grandTotal.toLocaleString()} đ</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                        {PAYMENT_METHODS.map(m => (
+                            <button key={m.id} onClick={() => setIsPaid(true)} className="p-3 bg-slate-800 rounded-xl flex flex-col items-center gap-2 hover:bg-blue-600/20 hover:border-blue-500 border border-transparent transition-all active:scale-95">
+                                <span className="text-2xl">{m.icon}</span>
+                                <span className="text-white text-xs font-bold">{m.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-5 border-t border-slate-800 bg-slate-900 shrink-0 pb-8">
+             <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col">
+                    <span className="text-slate-400 text-xs font-medium">Tổng tiền</span>
+                    <span className="text-white font-bold text-2xl tracking-tight">{grandTotal.toLocaleString()} <span className="text-sm text-slate-500 font-normal">đ</span></span>
+                </div>
+                <div className="flex gap-1">
+                    {[1,2,3,4].map(s => (
+                        <div key={s} className={`w-2 h-2 rounded-full ${step >= s ? 'bg-blue-500' : 'bg-slate-700'} transition-colors`}></div>
+                    ))}
+                </div>
+             </div>
+             {step < 4 ? (
+                <button 
+                    disabled={step === 2 && selectedSeats.length === 0}
+                    onClick={() => setStep(step + 1)} 
+                    className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]"
+                >
+                    Tiếp Tục <ArrowRight size={18}/>
+                </button>
+             ) : (
+                 <button onClick={() => setStep(3)} className="w-full bg-slate-800 hover:bg-slate-700 text-white py-4 rounded-xl font-bold transition-colors">Quay lại</button>
+             )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Main App ---
+const App = () => {
+  const [activeTab, setActiveTab] = useState('home');
+  const [selectedMovieForBooking, setSelectedMovieForBooking] = useState(null);
+  const [selectedMovieForDetails, setSelectedMovieForDetails] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState('Tất cả');
+  
+  // Auth State
+  const [user, setUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Initialize Auth
+  useEffect(() => {
+    const savedUser = localStorage.getItem('bonn_user');
+    if (savedUser) setUser(JSON.parse(savedUser));
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('bonn_user');
+    setUser(null);
+    setActiveTab('home');
+  };
+
+  // Protected Action Check
+  const requireAuth = (action) => {
+    if (!user) {
+        setShowAuthModal(true);
+        return;
+    }
+    action();
+  };
+
+  const filteredMovies = useMemo(() => {
+    return MOVIES.filter(movie => {
+        const matchesGenre = selectedGenre === 'Tất cả' || movie.genre.includes(selectedGenre);
+        const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesGenre && matchesSearch;
+    });
+  }, [selectedGenre, searchQuery]);
+
+  const renderContent = () => {
+      switch (activeTab) {
+        case 'schedule':
+            return (
+                <div className="container mx-auto px-4 pt-8 animate-in fade-in slide-in-from-right-8 duration-500 min-h-[60vh]">
+                     <h2 className="text-2xl font-bold text-white mb-6 border-l-4 border-blue-500 pl-4">Lịch Chiếu Hôm Nay</h2>
+                     <div className="grid gap-4">
+                        {MOVIES.map(movie => (
+                            <div key={movie.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex gap-4">
+                                <img src={movie.image} className="w-20 h-28 object-cover rounded-xl shadow-lg shrink-0" alt={movie.title}/>
+                                <div className="flex-1">
+                                    <h3 className="text-white font-bold text-base mb-1 line-clamp-1">{movie.title}</h3>
+                                    <p className="text-slate-400 text-xs mb-3">{movie.duration} • {movie.genre.split('/')[0]}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {SHOWTIMES.slice(0, 4).map(time => (
+                                            <button 
+                                                key={time} 
+                                                onClick={() => requireAuth(() => setSelectedMovieForBooking(movie))}
+                                                className="px-3 py-1.5 bg-slate-800 text-blue-400 rounded-lg text-xs font-bold border border-slate-700 hover:bg-blue-600 hover:text-white transition-all"
+                                            >
+                                                {time}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                     </div>
+                </div>
+            );
+        case 'offers':
+            if (!user) return (
+                <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6 animate-in zoom-in">
+                    <Lock size={48} className="text-slate-600 mb-4" />
+                    <h2 className="text-xl font-bold text-white mb-2">Nội dung giới hạn</h2>
+                    <p className="text-slate-400 text-sm mb-6">Vui lòng đăng nhập để xem các ưu đãi dành riêng cho thành viên.</p>
+                    <button onClick={() => setShowAuthModal(true)} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold">Đăng Nhập Ngay</button>
+                </div>
+            );
+            return (
+                <div className="container mx-auto px-4 pt-20 animate-in zoom-in duration-500 min-h-[60vh] flex flex-col items-center justify-center text-center">
+                    <Gift size={48} className="text-blue-500 mb-4 opacity-50" />
+                    <h2 className="text-xl font-bold text-white mb-2">Ưu đãi thành viên</h2>
+                    <p className="text-slate-400 text-sm">Xin chào {user.fullName}, hiện chưa có mã giảm giá nào.</p>
+                </div>
+            );
+        case 'news':
+            if (!user) return (
+                <div className="flex flex-col items-center justify-center h-[60vh] text-center px-6 animate-in zoom-in">
+                    <Lock size={48} className="text-slate-600 mb-4" />
+                    <h2 className="text-xl font-bold text-white mb-2">Nội dung giới hạn</h2>
+                    <p className="text-slate-400 text-sm mb-6">Đăng nhập để cập nhật tin tức điện ảnh mới nhất.</p>
+                    <button onClick={() => setShowAuthModal(true)} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold">Đăng Nhập Ngay</button>
+                </div>
+            );
+            return (
+                <div className="container mx-auto px-4 pt-20 animate-in zoom-in duration-500 min-h-[60vh] flex flex-col items-center justify-center text-center">
+                    <Newspaper size={48} className="text-blue-500 mb-4 opacity-50" />
+                    <h2 className="text-xl font-bold text-white mb-2">Tin Tức</h2>
+                    <p className="text-slate-400 text-sm">Chưa có bài viết mới.</p>
+                </div>
+            );
+        case 'home':
+        default:
+            return (
+                <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
+                    {/* Hero Banner (Spider-Man only) */}
+                    {!searchQuery && (
+                        <div className="pl-5 overflow-x-auto flex gap-4 hide-scrollbar mb-8 pr-5 py-2">
+                            {MOVIES.slice(0, 3).map((movie) => (
+                                <div key={movie.id} className="min-w-[70vw] sm:min-w-[280px] h-[160px] rounded-3xl overflow-hidden relative group shrink-0 shadow-lg shadow-black/50 transition-transform active:scale-95" onClick={() => requireAuth(() => setSelectedMovieForBooking(movie))}>
+                                    <img src={movie.backdrop} className="w-full h-full object-cover" alt={movie.title} />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent flex flex-col justify-end p-5">
+                                        {movie.id === 2 && (
+                                            <span className="text-blue-400 text-[10px] font-black uppercase tracking-wider mb-1 bg-black/60 w-fit px-2 py-0.5 rounded backdrop-blur-sm shadow-sm">Đang Hot</span>
+                                        )}
+                                        <h3 className="text-white font-bold text-lg truncate leading-tight drop-shadow-md">{movie.title}</h3>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="container mx-auto px-4 pb-20">
+                        {/* Filters */}
+                        <div className="flex flex-col gap-4 mb-6">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+                                {searchQuery ? "Kết quả tìm kiếm" : "Phim Đang Chiếu"}
+                            </h2>
+                            <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+                                {GENRES.map((cat) => (
+                                    <button 
+                                    key={cat}
+                                    onClick={() => setSelectedGenre(cat)}
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${selectedGenre === cat ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-slate-800 text-slate-400'}`}
+                                    >
+                                    {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Movie List */}
+                        <div className="flex flex-col gap-4">
+                            {filteredMovies.map(movie => (
+                                <div key={movie.id} className="flex gap-4 bg-slate-900/50 p-3 rounded-3xl border border-slate-800/50 hover:bg-slate-800/50 transition-all group">
+                                    <div className="relative shrink-0 w-24 h-36">
+                                        <img src={movie.image} className="w-full h-full rounded-2xl object-cover shadow-lg" alt={movie.title}/>
+                                        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[10px] text-white font-bold flex items-center gap-0.5">
+                                            <Star size={8} className="text-yellow-400 fill-yellow-400"/> {movie.rating}
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 py-1 flex flex-col justify-between">
+                                        <div>
+                                            <h3 className="text-white font-bold text-base mb-1 line-clamp-1">{movie.title}</h3>
+                                            <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
+                                                <Clock size={12} /> {movie.duration} 
+                                                <span className="w-1 h-1 bg-slate-600 rounded-full"></span>
+                                                <span>2D</span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-1 mb-2">
+                                                <span className="px-2 py-0.5 bg-slate-800 rounded text-[10px] text-slate-300 border border-slate-700">{movie.genre.split('/')[0]}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => setSelectedMovieForDetails(movie)}
+                                                className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-white hover:bg-slate-700 transition-colors border border-slate-700"
+                                            >
+                                                <Info size={18} />
+                                            </button>
+                                            <button 
+                                                onClick={() => requireAuth(() => setSelectedMovieForBooking(movie))}
+                                                className="flex-1 bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-blue-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <Ticket size={14} /> Đặt Vé
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+      }
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-slate-200 font-sans pb-20">
+      
+      {/* Header */}
+      <header className="px-5 pt-safe-top pb-4 flex flex-col gap-4 bg-gradient-to-b from-black via-black/90 to-transparent sticky top-0 z-40 backdrop-blur-sm pt-4 transition-all duration-300">
+        <div className="flex justify-between items-center w-full">
+            <div>
+                {user ? (
+                    <div className="flex items-center gap-2 animate-in fade-in">
+                        <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-600">
+                            {user.avatar === 'default' ? <div className="w-full h-full bg-slate-800 flex items-center justify-center"><User size={16}/></div> : <img src={user.avatar} className="w-full h-full object-cover"/>}
+                        </div>
+                        <div>
+                            <p className="text-slate-400 text-[10px] font-medium leading-none mb-0.5">Xin chào,</p>
+                            <p className="text-white text-xs font-bold leading-none">{user.username}</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div>
+                        <p className="text-slate-400 text-xs font-medium mb-0.5">Chào khách,</p>
+                        <button onClick={() => setShowAuthModal(true)} className="text-blue-500 text-sm font-bold flex items-center gap-1 hover:underline">
+                            Đăng nhập <ChevronLeft size={12} className="rotate-180"/>
+                        </button>
+                    </div>
+                )}
+            </div>
+            
+            {/* New Logo: Icon + Text (Inline) */}
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/40">
+                    <Clapperboard size={18} className="text-white fill-white/20" />
+                </div>
+                <h1 className="flex items-center leading-none tracking-tight">
+                    <span className="text-lg font-black text-white">BONN</span>
+                    <span className="text-lg font-black text-blue-500">CINEMAS</span>
+                </h1>
+            </div>
+
+            <div className="flex gap-2">
+                <div className="relative">
+                    <button className="w-9 h-9 bg-slate-800/80 backdrop-blur-md rounded-full flex items-center justify-center text-white">
+                        <Search size={16} />
+                    </button>
+                    <input 
+                        type="text" 
+                        value={searchQuery}
+                        onChange={(e) => { setSearchQuery(e.target.value); if(activeTab !== 'home') setActiveTab('home'); }}
+                        className="absolute top-0 right-0 w-9 h-9 opacity-0 focus:opacity-100 focus:w-40 bg-slate-800 text-white text-xs pl-10 pr-3 rounded-full border border-blue-500 transition-all duration-300 outline-none z-10"
+                        placeholder="Tìm phim..."
+                    />
+                </div>
+                {user && (
+                    <button onClick={handleLogout} className="w-9 h-9 bg-red-500/10 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 border border-red-500/20">
+                        <LogOut size={16} />
+                    </button>
+                )}
+            </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="pt-2">
+          {renderContent()}
+      </main>
+
+      {/* Bottom Nav */}
+      <div className="fixed bottom-0 left-0 w-full bg-black/90 backdrop-blur-xl border-t border-slate-800 h-20 flex justify-around items-center z-50 pb-safe-bottom">
+            <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-1 ${activeTab === 'home' ? 'text-blue-500' : 'text-slate-500'} transition-colors`}>
+                <Home size={20} className={`transition-transform ${activeTab === 'home' ? 'scale-110' : ''}`} />
+                <span className="text-[10px] font-medium">Trang Chủ</span>
+            </button>
+            <button onClick={() => setActiveTab('schedule')} className={`flex flex-col items-center gap-1 ${activeTab === 'schedule' ? 'text-blue-500' : 'text-slate-500'} transition-colors`}>
+                <Calendar size={20} className={`transition-transform ${activeTab === 'schedule' ? 'scale-110' : ''}`} />
+                <span className="text-[10px] font-medium">Lịch Chiếu</span>
+            </button>
+            <div className="w-14"></div> 
+            <button onClick={() => setActiveTab('offers')} className={`flex flex-col items-center gap-1 ${activeTab === 'offers' ? 'text-blue-500' : 'text-slate-500'} transition-colors`}>
+                <Gift size={20} className={`transition-transform ${activeTab === 'offers' ? 'scale-110' : ''}`} />
+                <span className="text-[10px] font-medium">Ưu Đãi</span>
+            </button>
+            <button onClick={() => setActiveTab('news')} className={`flex flex-col items-center gap-1 ${activeTab === 'news' ? 'text-blue-500' : 'text-slate-500'} transition-colors`}>
+                <Newspaper size={20} className={`transition-transform ${activeTab === 'news' ? 'scale-110' : ''}`} />
+                <span className="text-[10px] font-medium">Tin Tức</span>
+            </button>
+            
+            {/* FAB */}
+            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                <button 
+                    onClick={() => setActiveTab('home')}
+                    className="w-16 h-16 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(37,99,235,0.6)] flex items-center justify-center border-[6px] border-black transition-transform active:scale-90 active:rotate-90"
+                >
+                    <Ticket size={28} className="text-white fill-white" />
+                </button>
+            </div>
+      </div>
+
+      {/* Modals */}
+      {selectedMovieForBooking && user && (
+        <BookingWizard movie={selectedMovieForBooking} onClose={() => setSelectedMovieForBooking(null)} user={user} />
+      )}
+      
+      {selectedMovieForDetails && (
+        <MovieDetailsModal 
+            movie={selectedMovieForDetails} 
+            onClose={() => setSelectedMovieForDetails(null)} 
+            onBook={(m) => requireAuth(() => setSelectedMovieForBooking(m))}
+        />
+      )}
+
+      {showAuthModal && (
+        <AuthModal onClose={() => setShowAuthModal(false)} onLoginSuccess={(userData) => {
+            setUser(userData);
+            setShowAuthModal(false);
+        }} />
+      )}
+    </div>
+  );
+};
+
+export default App;
