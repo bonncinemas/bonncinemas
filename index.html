@@ -700,7 +700,6 @@
             const [activeTab, setActiveTab] = useState('home');
             const [selectedMovieForBooking, setSelectedMovieForBooking] = useState(null);
             const [selectedMovieForDetails, setSelectedMovieForDetails] = useState(null);
-            const [searchQuery, setSearchQuery] = useState('');
             const [selectedGenre, setSelectedGenre] = useState('Tất cả');
             
             const [user, setUser] = useState(null);
@@ -728,10 +727,9 @@
             const filteredMovies = useMemo(() => {
                 return MOVIES.filter(movie => {
                     const matchesGenre = selectedGenre === 'Tất cả' || movie.genre.includes(selectedGenre);
-                    const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase());
-                    return matchesGenre && matchesSearch;
+                    return matchesGenre;
                 });
-            }, [selectedGenre, searchQuery]);
+            }, [selectedGenre]);
 
             const renderContent = () => {
                 switch (activeTab) {
@@ -831,27 +829,25 @@
                     default:
                         return (
                             <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
-                                {!searchQuery && (
-                                    <div className="pl-5 overflow-x-auto flex gap-4 hide-scrollbar mb-8 pr-5 py-2">
-                                        {MOVIES.slice(0, 3).map((movie) => (
-                                            <div key={movie.id} className="min-w-[70vw] sm:min-w-[280px] h-[160px] rounded-3xl overflow-hidden relative group shrink-0 shadow-lg shadow-black/50 transition-transform active:scale-95" onClick={() => requireAuth(() => setSelectedMovieForBooking(movie))}>
-                                                <img src={movie.backdrop} className="w-full h-full object-cover" alt={movie.title} />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent flex flex-col justify-end p-5">
-                                                    {movie.id === 2 && (
-                                                        <span className="text-blue-400 text-[10px] font-black uppercase tracking-wider mb-1 bg-black/60 w-fit px-2 py-0.5 rounded backdrop-blur-sm shadow-sm">Đang Hot</span>
-                                                    )}
-                                                    <h3 className="text-white font-bold text-lg truncate leading-tight drop-shadow-md">{movie.title}</h3>
-                                                </div>
+                                <div className="pl-5 overflow-x-auto flex gap-4 hide-scrollbar mb-8 pr-5 py-2">
+                                    {MOVIES.slice(0, 3).map((movie) => (
+                                        <div key={movie.id} className="min-w-[70vw] sm:min-w-[280px] h-[160px] rounded-3xl overflow-hidden relative group shrink-0 shadow-lg shadow-black/50 transition-transform active:scale-95" onClick={() => requireAuth(() => setSelectedMovieForBooking(movie))}>
+                                            <img src={movie.backdrop} className="w-full h-full object-cover" alt={movie.title} />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent flex flex-col justify-end p-5">
+                                                {movie.id === 2 && (
+                                                    <span className="text-blue-400 text-[10px] font-black uppercase tracking-wider mb-1 bg-black/60 w-fit px-2 py-0.5 rounded backdrop-blur-sm shadow-sm">Đang Hot</span>
+                                                )}
+                                                <h3 className="text-white font-bold text-lg truncate leading-tight drop-shadow-md">{movie.title}</h3>
                                             </div>
-                                        ))}
-                                    </div>
-                                )}
+                                        </div>
+                                    ))}
+                                </div>
 
                                 <div className="container mx-auto px-4 pb-20">
                                     <div className="flex flex-col gap-4 mb-6">
                                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                             <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                                            {searchQuery ? "Kết quả tìm kiếm" : "Phim Đang Chiếu"}
+                                            Phim Đang Chiếu
                                         </h2>
                                         <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
                                             {GENRES.map((cat) => (
@@ -950,18 +946,6 @@
                                 </div>
 
                                 <div className="flex gap-2">
-                                    <div className="relative">
-                                        <button className="w-9 h-9 bg-slate-800/80 backdrop-blur-md rounded-full flex items-center justify-center text-white">
-                                            <Search size={16} />
-                                        </button>
-                                        <input 
-                                            type="text" 
-                                            value={searchQuery}
-                                            onChange={(e) => { setSearchQuery(e.target.value); if(activeTab !== 'home') setActiveTab('home'); }}
-                                            className="absolute top-0 right-0 w-9 h-9 opacity-0 focus:opacity-100 focus:w-40 bg-slate-800 text-white text-xs pl-10 pr-3 rounded-full border border-blue-500 transition-all duration-300 outline-none z-10"
-                                            placeholder="Tìm phim..."
-                                        />
-                                    </div>
                                     {user && (
                                         <button onClick={handleLogout} className="w-9 h-9 bg-red-500/10 backdrop-blur-md rounded-full flex items-center justify-center text-red-500 border border-red-500/20">
                                             <LogOut size={16} />
