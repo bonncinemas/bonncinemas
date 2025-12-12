@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BonnCinemas</title>
+    <title>Bonn Cinemas</title>
 
     <!-- PWA Settings cho iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -44,7 +44,17 @@
             overscroll-behavior-y: none;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
+            /* Vô hiệu hóa chọn văn bản (copy) */
+            -webkit-user-select: none;
+            user-select: none;
         }
+        
+        /* Vẫn cho phép chọn/nhập văn bản trong ô tìm kiếm */
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .screen-arc {
